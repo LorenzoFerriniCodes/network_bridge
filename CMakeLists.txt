@@ -20,6 +20,7 @@ find_package(pluginlib REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ZSTD REQUIRED libzstd)
+find_package(zmqpp_vendor REQUIRED)
 
 if(BUILD_TESTING)
   find_package(launch_testing_ament_cmake REQUIRED)
@@ -55,6 +56,10 @@ add_library(tcp_interface SHARED
   src/network_interfaces/tcp_interface.cpp
 )
 
+add_library(zmq_interface SHARED
+  src/network_interfaces/zmq_interface.cpp
+)
+
 target_link_libraries(network_bridge PUBLIC
   ${std_msgs_TARGETS}
   ${tf2_msgs_TARGETS}
@@ -76,6 +81,16 @@ target_link_libraries(tcp_interface PUBLIC
   ${Boost_LIBRARIES}
 )
 
+ament_target_dependencies(zmq_interface
+  rclcpp
+  pluginlib
+  zmqpp_vendor
+)
+
+target_link_libraries(zmq_interface
+  zmqpp
+)
+
 pluginlib_export_plugin_description_file(network_bridge network_interface_plugins.xml)
 
 install(TARGETS
@@ -86,6 +101,7 @@ install(TARGETS
 install(TARGETS
   udp_interface
   tcp_interface
+  zmq_interface
   DESTINATION lib/
 )
 
