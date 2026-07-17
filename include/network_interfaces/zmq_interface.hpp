@@ -28,6 +28,7 @@ SOFTWARE.
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
@@ -79,6 +80,7 @@ protected:
   void load_parameters();
   void setup_server();
   void setup_client();
+  void configure_socket();
   void receive_thread();
 
 private:
@@ -89,6 +91,8 @@ private:
   std::string pattern_;
   std::string remote_address_;
   int port_;
+  int high_water_mark_;  // -1 = ZMQ default; 0 = unlimited
+  bool conflate_;
   std::atomic<bool> ready_;
   std::atomic<bool> failed_;
   std::atomic<bool> shutting_down_;

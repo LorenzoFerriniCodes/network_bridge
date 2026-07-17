@@ -41,11 +41,15 @@ void ZmqInterface::load_parameters()
   node_->declare_parameter(prefix + "pattern", std::string("pub_sub"));
   node_->declare_parameter(prefix + "remote_address", std::string(""));
   node_->declare_parameter(prefix + "port", 0);
+  node_->declare_parameter(prefix + "high_water_mark", -1);
+  node_->declare_parameter(prefix + "conflate", false);
 
   node_->get_parameter(prefix + "role", role_);
   node_->get_parameter(prefix + "pattern", pattern_);
   node_->get_parameter(prefix + "remote_address", remote_address_);
   node_->get_parameter(prefix + "port", port_);
+  node_->get_parameter(prefix + "high_water_mark", high_water_mark_);
+  node_->get_parameter(prefix + "conflate", conflate_);
 
   RCLCPP_INFO(node_->get_logger(), "role_: %s", role_.c_str());
   RCLCPP_INFO(node_->get_logger(), "pattern_: %s", pattern_.c_str());
@@ -53,6 +57,9 @@ void ZmqInterface::load_parameters()
     node_->get_logger(), "Remote Address: %s",
     remote_address_.c_str());
   RCLCPP_INFO(node_->get_logger(), "Remote Port: %d", port_);
+  RCLCPP_INFO(node_->get_logger(), "High Water Mark: %d", high_water_mark_);
+  RCLCPP_INFO(node_->get_logger(), "Conflate: %s",
+              conflate_ ? "true" : "false");
 }
 
 void ZmqInterface::open()
@@ -123,11 +130,26 @@ void ZmqInterface::receive_thread()
   }
 }
 
-void ZmqInterface::setup_server()
-{
-  zmqpp::socket_type type =
-    (pattern_ == "pub_sub") ? zmqpp::socket_type::pub : zmqpp::socket_type::push;
+void ZmqInterface::configure_socket() {
+  if (high_water_mark_ >= 0) {
+    if (role_ == "server") {
+      socket_->set(zmqpp::socket_option::send_high_water_mark,
+                   high_water_mark_);
+    } else {
+      socket_->set(zmqpp::socket_option::receive_high_water_mark,
+                   high_water_mark_);
+    }
+  }
+  if (conflate_) {
+    socket_->set(zmqpp::socket_option::conflate, 1);
+  }
+}
+
+void ZmqInterface::setup_server() {
+  zmqpp::socket_type type = (pattern_ == "pub_sub") ? zmqpp::socket_type::pub
+                                                    : zmqpp::socket_type::push;
   socket_ = std::make_shared<zmqpp::socket>(context_, type);
+  configure_socket();
   try {
     socket_->bind("tcp://*:" + std::to_string(port_));
   } catch (const zmqpp::exception & e) {
