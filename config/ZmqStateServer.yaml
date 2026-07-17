@@ -1,0 +1,22 @@
+# Configuration for the ZMQ Server (PUSH/PULL or PUB/SUB)
+/**/zmq_bridge_server_state:
+  ros__parameters:
+    network_interface: "network_bridge::ZmqInterface"
+
+    ZmqInterface:
+      role: "server"
+      # pattern: "pub_sub" # Options: pub_sub (default) or push_pull
+      port: 5556
+      high_water_mark: 1
+      conflate: true
+
+    default_rate: 50.0
+    default_zstd_level: 3
+    publish_stale_data: False
+
+    # The server subscribes to this topic and pushes it to ZMQ
+    topics:
+      - "/joint_states"
+
+    subscribe_namespace: ""
+    publish_namespace: ""
