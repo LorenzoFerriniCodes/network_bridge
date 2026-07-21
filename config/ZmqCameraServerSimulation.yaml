@@ -17,6 +17,7 @@
     # The server subscribes to this topic and pushes it to ZMQ
     topics:
       - "/head_front_camera/color/image_raw"
+      - "/mujoco_camera_plugin/wrist_right/color"
 
     subscribe_namespace: ""
     publish_namespace: ""
